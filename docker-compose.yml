@@ -1,18 +1,13 @@
 # GS Net Academy — Online Test Portal
-# Start everything:
+# Start:
 # docker compose up -d --build
 
 services:
 
-  # =========================
-  # BACKEND
-  # =========================
   backend:
     build: ./backend
     restart: unless-stopped
 
-    # Backend configuration
-    # MongoDB Atlas connection is inside this file
     env_file:
       - ./backend/.env
 
@@ -21,9 +16,6 @@ services:
       PORT: 5000
       SEED_ON_START: "true"
 
-  # =========================
-  # FRONTEND
-  # =========================
   frontend:
     build: ./frontend
     restart: unless-stopped
@@ -31,6 +23,5 @@ services:
     depends_on:
       - backend
 
-    # Host Nginx will proxy to this port
     ports:
       - "127.0.0.1:5002:80"
