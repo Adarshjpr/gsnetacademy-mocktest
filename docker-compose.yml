@@ -1,44 +1,36 @@
 # GS Net Academy — Online Test Portal
-# Start everything:   docker compose up -d --build
-# Open:               http://<your-server-ip>   (or http://localhost)
-services:
-  mongo:
-    image: mongo:7
-    restart: unless-stopped
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+# Start everything:
+# docker compose up -d --build
 
+services:
+
+  # =========================
+  # BACKEND
+  # =========================
   backend:
     build: ./backend
     restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_healthy
+
+    # Backend configuration
+    # MongoDB Atlas connection is inside this file
+    env_file:
+      - ./backend/.env
+
     environment:
       NODE_ENV: production
       PORT: 5000
-      MONGO_URI: mongodb://mongo:27017/exam_portal
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CLIENT_ORIGIN: ${PUBLIC_URL:-http://localhost}
-      APP_TIMEZONE: Asia/Kolkata
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SEED_ON_START: "true"
 
+  # =========================
+  # FRONTEND
+  # =========================
   frontend:
     build: ./frontend
     restart: unless-stopped
+
     depends_on:
       - backend
-    ports:
-     - "127.0.0.1:5002:80"
 
-volumes:
-  mongo_data:
+    # Host Nginx will proxy to this port
+    ports:
+      - "127.0.0.1:5002:80"
