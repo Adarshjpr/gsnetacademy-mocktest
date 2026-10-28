@@ -1,0 +1,27 @@
+# GS Net Academy — Online Test Portal
+# Start:
+# docker compose up -d --build
+
+services:
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      SEED_ON_START: "true"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "127.0.0.1:5002:80"

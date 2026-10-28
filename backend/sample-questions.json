@@ -1,0 +1,28 @@
+{
+  "questions": [
+    {
+      "question": { "en": "Find the next number: 2, 4, 8, 16, ?", "hi": "अगली संख्या ज्ञात करें: 2, 4, 8, 16, ?" },
+      "options": { "en": ["24", "30", "32", "36"], "hi": ["24", "30", "32", "36"] },
+      "correctAnswer": 2,
+      "explanation": {
+        "en": {
+          "correct": "Each term is double the previous one: 16 × 2 = 32.",
+          "options": { "0": "24 adds 8, but the pattern multiplies by 2.", "1": "30 does not follow the ×2 pattern.", "2": "32 = 16 × 2, correct.", "3": "36 does not follow the ×2 pattern." }
+        },
+        "hi": {
+          "correct": "हर पद पिछले पद का दोगुना है: 16 × 2 = 32।",
+          "options": { "0": "24 में 8 जोड़ा गया है, जबकि पैटर्न ×2 का है।", "1": "30 ×2 पैटर्न का पालन नहीं करता।", "2": "32 = 16 × 2, सही।", "3": "36 ×2 पैटर्न का पालन नहीं करता।" }
+        }
+      }
+    },
+    {
+      "question": { "en": "A car moves at 60 km/h. How far will it travel in 2.5 hours?", "hi": "एक कार 60 किमी/घंटा की चाल से चलती है। 2.5 घंटे में वह कितनी दूरी तय करेगी?" },
+      "options": { "en": ["120 km", "140 km", "150 km", "160 km"], "hi": ["120 किमी", "140 किमी", "150 किमी", "160 किमी"] },
+      "correctAnswer": "C",
+      "explanation": {
+        "en": { "correct": "Distance = Speed × Time = 60 × 2.5 = 150 km.", "options": ["120 km is the distance in 2 hours.", "140 km does not match 60 × 2.5.", "150 km = 60 × 2.5, correct.", "160 km would need about 2.67 hours."] },
+        "hi": { "correct": "दूरी = चाल × समय = 60 × 2.5 = 150 किमी।", "options": ["120 किमी, 2 घंटे की दूरी है।", "140 किमी, 60 × 2.5 के बराबर नहीं है।", "150 किमी = 60 × 2.5, सही।", "160 किमी के लिए लगभग 2.67 घंटे लगेंगे।"] }
+      }
+    }
+  ]
+}
