@@ -14,7 +14,9 @@ import { errorHandler, notFound } from './middleware/error.js';
 
 const app = express();
 
-app.set('trust proxy', 1);
+// Number of reverse proxies in front of the API. Docker setup = host nginx + frontend nginx = 2.
+// If this is too low, every visitor shares the proxy's IP and one user's attempts block everyone.
+app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(

@@ -36,7 +36,8 @@ export function errorHandler(err, req, res, next) {
 
   if (status >= 500) {
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, err);
-    if (process.env.NODE_ENV === 'production') message = 'Internal server error';
+    // AppError messages are written for users (e.g. "email is not configured"); hide only unexpected errors
+    if (process.env.NODE_ENV === 'production' && !(err instanceof AppError)) message = 'Internal server error';
   }
 
   const body = { success: false, message };

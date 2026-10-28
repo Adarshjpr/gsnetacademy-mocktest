@@ -10,25 +10,35 @@ import { getEmailTransport, sendPasswordResetEmail } from '../services/email.ser
 
 const router = Router();
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many attempts. Please try again in 15 minutes.' },
-});
+const limiter = (max, options = {}) =>
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many attempts. Please try again in 15 minutes.' },
+    ...options,
+  });
 
-const passwordResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many attempts. Please try again in 15 minutes.' },
+/** Rate-limit key for one account (falls back to the IP when the field is missing) */
+const accountKey = (value, req) =>
+  typeof value === 'string' && value.trim() ? `acct:${value.trim().toLowerCase()}` : `ip:${req.ip}`;
+
+// Students often share one network (coaching centre / college Wi-Fi), so the strict limits are
+// counted per account; the per-IP limits are loose and only stop one machine from flooding.
+const registerLimiter = limiter(30);
+const loginIpLimiter = limiter(100);
+const loginAccountLimiter = limiter(10, {
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => accountKey(req.body?.identifier ?? req.body?.username, req),
 });
+const forgotIpLimiter = limiter(50);
+const forgotEmailLimiter = limiter(5, { keyGenerator: (req) => accountKey(req.body?.email, req) });
+const resetLimiter = limiter(30);
 
 router.post(
   '/register',
-  authLimiter,
+  registerLimiter,
   asyncHandler(async (req, res) => {
     const errors = validateRegister(req.body);
     if (errors.length) throw new AppError(400, errors[0], { details: errors });
@@ -66,7 +76,8 @@ router.post(
 
 router.post(
   '/login',
-  authLimiter,
+  loginIpLimiter,
+  loginAccountLimiter,
   asyncHandler(async (req, res) => {
     // "identifier" can be a username, an email or a mobile number
     const { password } = req.body || {};
@@ -95,7 +106,8 @@ router.post(
 
 router.post(
   '/forgot-password',
-  passwordResetLimiter,
+  forgotIpLimiter,
+  forgotEmailLimiter,
   asyncHandler(async (req, res) => {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     if (email.length > 120 || !EMAIL_RE.test(email)) throw new AppError(400, 'Enter a valid email address');
@@ -113,11 +125,12 @@ router.post(
       try {
         await sendPasswordResetEmail(transport, user, token);
       } catch (error) {
+        console.error(`[${new Date().toISOString()}] Password reset email failed for ${email}:`, error);
         await User.updateOne(
           { _id: user._id, passwordResetTokenHash: user.passwordResetTokenHash },
           { $unset: { passwordResetTokenHash: 1, passwordResetExpires: 1 } }
         );
-        throw error;
+        throw new AppError(503, 'Could not send the reset email right now. Please try again in a few minutes.');
       }
     }
 
@@ -130,7 +143,7 @@ router.post(
 
 router.post(
   '/reset-password',
-  passwordResetLimiter,
+  resetLimiter,
   asyncHandler(async (req, res) => {
     const { token, password } = req.body || {};
     if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token)) {
